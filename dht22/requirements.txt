@@ -1,0 +1,5 @@
+# Adafruit DHT22 library
+git+https://github.com/adafruit/Adafruit_Python_DHT.git
+
+# Influxdb client
+influxdb==5.0.0
