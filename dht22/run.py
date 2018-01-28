@@ -1,9 +1,9 @@
-import Adafruit_DHT
-import time
 import calendar
-import time
 import logging
 import os
+import time
+
+import Adafruit_DHT
 
 from influxdb import InfluxDBClient
 
@@ -16,7 +16,8 @@ INFLUX_DATABASE = os.environ.get('INFLUX_DATABASE', 'smarthome')
 HUMIDITY_PROTOCOL = os.environ.get('HUMIDITY_PROTOCOL', "humidity,room=living value={value}")
 TEMPERATURE_PROTOCOL = os.environ.get('TEMPERATURE_PROTOCOL', "temperature,room=living value={value}")
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=LOG_LEVEL)
 
 def get_sensor_values():
 	humidity, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, DATA_GPIO)
@@ -33,13 +34,14 @@ def save_sensor_values(humidity, temperature):
 		current_time=str(ts)
 	)
 	points = [temp_lp, hum_lp]
+	logging.debug("Writing: {}".format(points))
 	client = InfluxDBClient(INFLUX_HOST, INFLUX_PORT, INFLUX_USER, INFLUX_PWD, INFLUX_DATABASE)
 	client.write(points, {'db': INFLUX_DATABASE}, 204, 'line')
 
 def loop():
 	while True:
 		humidity, temperature = get_sensor_values()
-		logging.info("Temperature: {}, Humidity: {}".format(temperature, humidity))
+		logging.debug("Fetched: {}".format((temperature, humidity)))
 		save_sensor_values(humidity, temperature)
 		time.sleep(30)
 
